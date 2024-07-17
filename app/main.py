@@ -1,0 +1,86 @@
+from fastapi import FastAPI, HTTPException, Response
+from pydantic import BaseModel
+from app.tasks import process_document, combine_results
+from celery import group
+import traceback
+from prometheus_client import generate_latest, REGISTRY
+from prometheus_fastapi_instrumentator import Instrumentator
+import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+
+# Initialize Prometheus instrumentation
+Instrumentator().instrument(app).expose(app)
+
+ARTICLES_DIR = "/app/Articles"
+
+class AnalysisRequest(BaseModel):
+    file_names: str
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(REGISTRY), media_type="text/plain")
+
+@app.get("/articles")
+async def list_articles():
+    articles = [f for f in os.listdir(ARTICLES_DIR) if f.endswith('.pdf')]
+    return {"articles": articles}
+
+@app.post("/analyze-documents")
+async def analyze_documents(request: AnalysisRequest):
+    try:
+        file_names = request.file_names.split(',')
+        file_contents = []
+        for file_name in file_names:
+            file_path = os.path.join(ARTICLES_DIR, file_name.strip())
+            if os.path.exists(file_path):
+                with open(file_path, 'rb') as file:
+                    file_contents.append(file.read())
+                logger.info(f"File loaded: {file_name}")
+            else:
+                logger.warning(f"File not found: {file_name}")
+        
+        if not file_contents:
+            raise HTTPException(status_code=400, detail="No valid files provided")
+        
+        logger.info(f"Processing {len(file_contents)} files")
+        
+        # Use group to process documents
+        job = group(process_document.s(doc) for doc in file_contents)
+        result = job.apply_async()
+        
+        logger.info("Waiting for tasks to complete")
+        # Wait for all tasks to complete
+        task_results = result.get(timeout=120)  # 2 minute timeout
+        
+        # Filter out None results (failed documents)
+        valid_results = [r for r in task_results if r is not None]
+        
+        if not valid_results:
+            return {"message": "No valid documents could be processed", "most_common_words": []}
+        
+        logger.info(f"Successfully processed {len(valid_results)} out of {len(file_contents)} documents")
+        
+        logger.info("Combining results")
+        # Combine results
+        final_result = combine_results.delay(valid_results)
+        
+        # Wait for the final result
+        combined_result = final_result.get(timeout=30)  # 30 second timeout for combining
+        
+        logger.info("Results combined")
+        return {"most_common_words": combined_result}
+    except Exception as e:
+        logger.error(f"Error in analyze_documents: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Unhandled exception: {str(exc)}")
+    logger.error(traceback.format_exc())
+    return {"detail": "An unexpected error occurred. Please try again later."}

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-celery
+  labels:
+    app: {{ .Release.Name }}
+    app.kubernetes.io/component: celery
+spec:
+  replicas: {{ .Values.celery.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      app.kubernetes.io/component: celery
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        app.kubernetes.io/component: celery
+    spec:
+      containers:
+        - name: celery
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["celery", "-A", "app.tasks", "worker", "--loglevel=info"]
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.redis.host }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+          resources:
+            {{- toYaml .Values.celery.resources | nindent 12 }}

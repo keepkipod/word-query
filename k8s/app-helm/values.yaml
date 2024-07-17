@@ -1,0 +1,38 @@
+replicaCount: 1
+
+image:
+  repository: fastapi-celery-app
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: ClusterIP
+  port: 8000
+
+celery:
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+redis:
+  host: sample-redis-master.redis
+  port: 6379
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring  # adjust as needed
+  interval: 15s
+  additionalLabels: {}
+
+# keda:
+#   enabled: true
+#   host: "sample-redis-master.redis:6379"
+#   pollingInterval: 5
+#   cooldownPeriod: 30
+#   minReplicaCount: 1
+#   maxReplicaCount: 10

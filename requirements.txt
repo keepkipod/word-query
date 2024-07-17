@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+celery
+redis
+pdfminer.six
+prometheus-client
+prometheus-fastapi-instrumentator

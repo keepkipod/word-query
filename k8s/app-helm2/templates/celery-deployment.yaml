@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fastapi-celery-app.fullname" . }}-celery
+  labels:
+    {{- include "fastapi-celery-app.labels" . | nindent 4 }}
+    {{- with .Values.celery.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.celery.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "fastapi-celery-app.selectorLabels" . | nindent 6 }}
+      {{- with .Values.celery.selectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "fastapi-celery-app.selectorLabels" . | nindent 8 }}
+        {{- with .Values.celery.selectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: celery
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["celery", "-A", "app.tasks", "worker", "--loglevel=info"]
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.redis.host }}
+            - name: REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+          resources:
+            {{- toYaml .Values.celery.resources | nindent 12 }}
+          volumeMounts:
+            - name: prometheus-multiproc
+              mountPath: /tmp/prometheus_multiproc
+      volumes:
+        - name: prometheus-multiproc
+          emptyDir: {}

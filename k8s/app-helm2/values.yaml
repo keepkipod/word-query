@@ -1,0 +1,43 @@
+nameOverride: ""
+fullnameOverride: ""
+
+labels:
+  app: fastapi-celery-app
+  environment: production
+
+podLabels: {}
+
+selectorLabels:
+  app: fastapi-celery-app
+
+replicaCount: 1
+
+image:
+  repository: fastapi-celery-app
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: ClusterIP
+  port: 8000
+
+celery:
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+redis:
+  host: sample-redis-master.redis
+  port: 6379
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 15s
+  additionalLabels:
+    release: prometheus

@@ -1,0 +1,17 @@
+grafana:
+  enabled: true
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki:3100
+
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: loki
+        static_configs:
+          - targets:
+              - loki:3100
+
+alertmanager:
+  enabled: false
