@@ -6,7 +6,7 @@ grafana:
     name: loki
     orgId: 1
     type: loki
-    url: http://loki:3100
+    url: http://loki.loki:3100
     version: 1
   dashboardProviders:
     dashboardproviders.yaml:
@@ -26,7 +26,10 @@ grafana:
         gnetId: 18739
         revision: 1
         datasource: Prometheus
-        # 13639
+      app-logs:
+        gnetId: 13639
+        revision: 1
+        datasource: Prometheus
 
 prometheus:
   prometheusSpec:
