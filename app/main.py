@@ -50,8 +50,6 @@ async def analyze_documents(request: AnalysisRequest):
         # Wait for all tasks to complete
         task_results = result.get(timeout=120)  # 2 minute timeout
 
-        logger.info(f"Finished processing {len(task_results)} documents")
-
         # Combine results
         final_result = combine_results.delay(task_results)
 

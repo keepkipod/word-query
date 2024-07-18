@@ -6,9 +6,8 @@ import io
 from pdfminer.high_level import extract_text
 import os
 import traceback
-from prometheus_client import Counter, Histogram, start_http_server
+from prometheus_client import Counter, Histogram
 import time
-import threading
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,19 +24,10 @@ STOP_WORDS = set([
     'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were', 'will', 'with'
 ])
 
-CELERY_METRICS_PORT = int(os.environ.get('CELERY_METRICS_PORT', 8001))
-
+# Define Prometheus metrics
 documents_processed = Counter('documents_processed_total', 'Total number of documents processed', ['worker_id'])
 words_processed = Counter('words_processed_total', 'Total number of words processed', ['worker_id'])
 document_processing_time = Histogram('document_processing_seconds', 'Time spent processing a document', ['worker_id'])
-
-def start_metrics_server(port):
-    start_http_server(port)
-
-@celery_app.on_after_configure.connect
-def setup_metrics_server(sender, **kwargs):
-    threading.Thread(target=start_metrics_server, args=(CELERY_METRICS_PORT,)).start()
-    logger.info(f"Metrics server started on port {CELERY_METRICS_PORT}")
 
 @celery_app.task
 def process_document(document):
@@ -52,11 +42,10 @@ def process_document(document):
         # Update Prometheus metrics
         documents_processed.labels(worker_id=worker_id).inc()
         words_processed.labels(worker_id=worker_id).inc(len(filtered_words))
-        processing_time = time.time() - start_time
-        document_processing_time.labels(worker_id=worker_id).observe(processing_time)
+        document_processing_time.labels(worker_id=worker_id).observe(time.time() - start_time)
 
         logger.info(f"Processed document. Word count: {len(filtered_words)}")
-        logger.info(f"Updated metrics for worker {worker_id} - Documents: {documents_processed.labels(worker_id=worker_id)._value.get()}, Words: {words_processed.labels(worker_id=worker_id)._value.get()}, Processing time: {processing_time}")
+        logger.info(f"Updated metrics for worker {worker_id} - Documents: {documents_processed.labels(worker_id=worker_id)._value.get()}, Words: {words_processed.labels(worker_id=worker_id)._value.get()}")
 
         return dict(result)
     except Exception as e:
