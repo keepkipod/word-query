@@ -40,7 +40,7 @@ Deploy Loki
 ```
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
-helm upgrade --install loki grafana/loki -f k8s/loki/values.yaml --create-namespace --namespace loki
+helm upgrade --install loki grafana/loki-stack -f k8s/loki-stack/values.yaml --create-namespace --namespace loki
 ```
 Load the locally built image to the kind instance
 ```
