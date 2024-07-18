@@ -23,6 +23,7 @@ service:
 
 celery:
   replicaCount: 3
+  port: 8001
   resources:
     limits:
       cpu: 500m
@@ -30,10 +31,8 @@ celery:
     requests:
       cpu: 200m
       memory: 256Mi
-
-redis:
-  host: sample-redis-master.redis
-  port: 6379
+  labels:
+    app.kubernetes.io/component: celery
 
 serviceMonitor:
   enabled: true
@@ -41,3 +40,7 @@ serviceMonitor:
   interval: 15s
   additionalLabels:
     release: prometheus
+
+redis:
+  host: sample-redis-master.redis
+  port: 6379

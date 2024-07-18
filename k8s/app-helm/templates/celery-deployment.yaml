@@ -4,24 +4,21 @@ metadata:
   name: {{ include "fastapi-celery-app.fullname" . }}-celery
   labels:
     {{- include "fastapi-celery-app.labels" . | nindent 4 }}
-    {{- with .Values.celery.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    app.kubernetes.io/component: celery
 spec:
   replicas: {{ .Values.celery.replicaCount }}
   selector:
     matchLabels:
       {{- include "fastapi-celery-app.selectorLabels" . | nindent 6 }}
-      {{- with .Values.celery.selectorLabels }}
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+      app.kubernetes.io/component: celery
   template:
     metadata:
       labels:
         {{- include "fastapi-celery-app.selectorLabels" . | nindent 8 }}
-        {{- with .Values.celery.selectorLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        app.kubernetes.io/component: celery
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
     spec:
       containers:
         - name: celery
@@ -33,5 +30,8 @@ spec:
               value: {{ .Values.redis.host }}
             - name: REDIS_PORT
               value: {{ .Values.redis.port | quote }}
+          ports:
+            - containerPort: 8001
+              name: metrics
           resources:
             {{- toYaml .Values.celery.resources | nindent 12 }}

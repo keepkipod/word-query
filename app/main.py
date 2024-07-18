@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # Initialize Prometheus instrumentation
-Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
 
 ARTICLES_DIR = "/app/Articles"
 

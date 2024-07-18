@@ -6,8 +6,9 @@ import io
 from pdfminer.high_level import extract_text
 import os
 import traceback
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Histogram, start_http_server
 import time
+import threading
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,10 +25,19 @@ STOP_WORDS = set([
     'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were', 'will', 'with'
 ])
 
-# Define Prometheus metrics
-documents_processed = Gauge('documents_processed', 'Number of documents processed', ['worker_id'])
-words_processed = Gauge('words_processed', 'Number of words processed', ['worker_id'])
+CELERY_METRICS_PORT = 8001
+
+documents_processed = Counter('documents_processed_total', 'Total number of documents processed', ['worker_id'])
+words_processed = Counter('words_processed_total', 'Total number of words processed', ['worker_id'])
 document_processing_time = Histogram('document_processing_seconds', 'Time spent processing a document', ['worker_id'])
+
+def start_metrics_server(port):
+    start_http_server(port)
+
+@celery_app.on_after_configure.connect
+def setup_metrics_server(sender, **kwargs):
+    threading.Thread(target=start_metrics_server, args=(CELERY_METRICS_PORT,)).start()
+    logger.info(f"Metrics server started on port {CELERY_METRICS_PORT}")
 
 @celery_app.task
 def process_document(document):
