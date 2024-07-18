@@ -25,7 +25,7 @@ STOP_WORDS = set([
     'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'were', 'will', 'with'
 ])
 
-CELERY_METRICS_PORT = 8001
+CELERY_METRICS_PORT = int(os.environ.get('CELERY_METRICS_PORT', 8001))
 
 documents_processed = Counter('documents_processed_total', 'Total number of documents processed', ['worker_id'])
 words_processed = Counter('words_processed_total', 'Total number of words processed', ['worker_id'])
@@ -48,14 +48,15 @@ def process_document(document):
         words = re.findall(r'\b\w+\b', text.lower())
         filtered_words = [word for word in words if word not in STOP_WORDS]
         result = CollectionsCounter(filtered_words)
-        logger.info(f"Processed document. Word count: {len(result)}")
-
+        
         # Update Prometheus metrics
         documents_processed.labels(worker_id=worker_id).inc()
         words_processed.labels(worker_id=worker_id).inc(len(filtered_words))
-        document_processing_time.labels(worker_id=worker_id).observe(time.time() - start_time)
+        processing_time = time.time() - start_time
+        document_processing_time.labels(worker_id=worker_id).observe(processing_time)
 
-        logger.info(f"Updated metrics for worker {worker_id} - Documents: {documents_processed.labels(worker_id=worker_id)._value.get()}, Words: {words_processed.labels(worker_id=worker_id)._value.get()}")
+        logger.info(f"Processed document. Word count: {len(filtered_words)}")
+        logger.info(f"Updated metrics for worker {worker_id} - Documents: {documents_processed.labels(worker_id=worker_id)._value.get()}, Words: {words_processed.labels(worker_id=worker_id)._value.get()}, Processing time: {processing_time}")
 
         return dict(result)
     except Exception as e:

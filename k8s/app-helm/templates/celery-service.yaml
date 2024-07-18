@@ -10,7 +10,7 @@ spec:
     {{- include "fastapi-celery-app.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: celery
   ports:
-    - port: 8001
+    - port: {{ .Values.celery.metricsPort }}
       targetPort: metrics
       protocol: TCP
       name: metrics

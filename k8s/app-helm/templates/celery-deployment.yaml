@@ -30,8 +30,10 @@ spec:
               value: {{ .Values.redis.host }}
             - name: REDIS_PORT
               value: {{ .Values.redis.port | quote }}
+            - name: CELERY_METRICS_PORT
+              value: {{ .Values.celery.metricsPort | quote }}
           ports:
-            - containerPort: 8001
+            - containerPort: {{ .Values.celery.metricsPort }}
               name: metrics
           resources:
             {{- toYaml .Values.celery.resources | nindent 12 }}
