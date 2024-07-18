@@ -36,6 +36,12 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --create-namespace --namespace monitoring
 ```
+Deploy Loki
+```
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm upgrade --install loki grafana/loki -f k8s/loki/values.yaml --create-namespace --namespace loki
+```
 Load the locally built image to the kind instance
 ```
 kind load docker-image fastapi-celery-app
