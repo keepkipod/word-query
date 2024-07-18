@@ -21,10 +21,6 @@ COPY celery_config.py .
 # Copy the Articles folder into the container
 COPY Articles/ ./Articles
 
-# Set up directory for Prometheus multiprocess mode
-ENV PROMETHEUS_MULTIPROC_DIR /tmp/prometheus_multiproc
-RUN mkdir -p $PROMETHEUS_MULTIPROC_DIR && chmod 777 $PROMETHEUS_MULTIPROC_DIR
-
 # Expose the port the app runs on
 EXPOSE 8000
 

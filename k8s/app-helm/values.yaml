@@ -1,3 +1,15 @@
+nameOverride: ""
+fullnameOverride: ""
+
+labels:
+  app: fastapi-celery-app
+  environment: production
+
+podLabels: {}
+
+selectorLabels:
+  app: fastapi-celery-app
+
 replicaCount: 1
 
 image:
@@ -25,14 +37,7 @@ redis:
 
 serviceMonitor:
   enabled: true
-  namespace: monitoring  # adjust as needed
+  namespace: monitoring
   interval: 15s
-  additionalLabels: {}
-
-# keda:
-#   enabled: true
-#   host: "sample-redis-master.redis:6379"
-#   pollingInterval: 5
-#   cooldownPeriod: 30
-#   minReplicaCount: 1
-#   maxReplicaCount: 10
+  additionalLabels:
+    release: prometheus

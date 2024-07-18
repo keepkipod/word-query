@@ -81,3 +81,6 @@ curl -X POST http://localhost:8000/analyze-documents \
 curl -X POST http://localhost:8000/analyze-documents \
 -H "Content-Type: application/json" \
 -d '{"file_names": "sample.pdf"}'
+
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml && helm upgrade --install sample-redis bitnami/redis --create-namespace --namespace redis --set architecture=standalone --set auth.enabled=false && helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --create-namespace --namespace monitoring
