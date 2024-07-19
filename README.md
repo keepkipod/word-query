@@ -1,5 +1,8 @@
 Mac install go-task
 ```
+brew install helm
+brew install kind
+brew install kubectl
 brew install go-task
 ```
 
