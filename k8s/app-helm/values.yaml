@@ -2,18 +2,18 @@ nameOverride: ""
 fullnameOverride: ""
 
 labels:
-  app: fastapi-celery-app
+  app: wordz
   environment: production
 
 podLabels: {}
 
 selectorLabels:
-  app: fastapi-celery-app
+  app: wordz
 
 replicaCount: 1
 
 image:
-  repository: fastapi-celery-app
+  repository: wordz
   tag: latest
   pullPolicy: Never
 
@@ -43,5 +43,5 @@ serviceMonitor:
     release: prometheus
 
 redis:
-  host: sample-redis-master.redis
+  host: redis-master.redis
   port: 6379

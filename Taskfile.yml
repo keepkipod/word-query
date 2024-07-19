@@ -1,0 +1,96 @@
+version: '3'
+
+vars:
+  CLUSTER_NAME: mycluster
+  APP_NAME: words-query
+  APP_NAMESPACE: app
+  GRAFANA_NAMESPACE: monitoring
+
+tasks:
+  deploy-cluster:
+    cmds:
+      - kind create cluster --name {{.CLUSTER_NAME}} --config ./kind-config.yaml
+
+  wait-for-cluster:
+    cmds:
+      - kubectl wait --for=condition=ready node --all --timeout=300s
+
+  setup-helm:
+    deps: [wait-for-cluster]
+    cmds:
+      - helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      - helm repo add bitnami https://charts.bitnami.com/bitnami
+      - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+      - helm repo update
+
+  deploy-ingress:
+    cmds:
+      - helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace ingress-nginx
+
+  deploy-redis:
+    cmds:
+      - helm upgrade --install redis bitnami/redis -f k8s/redis/values.yaml --create-namespace --namespace redis
+
+  deploy-prometheus:
+    cmds:
+      - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --create-namespace --namespace monitoring
+
+  deploy-services:
+    deps: [setup-helm]
+    cmds:
+      - task: deploy-ingress
+      - task: deploy-redis
+      - task: deploy-prometheus
+    output: group
+
+  post-deploy-services:
+    deps: [deploy-services]
+    cmds:
+      - kubectl rollout status deployment --namespace ingress-nginx --timeout=3m
+      - kubectl rollout status deployment --namespace monitoring --timeout=3m
+      - kubectl rollout status sts --namespace monitoring --timeout=3m
+      - kubectl rollout status sts --namespace redis --timeout=3m
+
+  build-app:
+    deps: [post-deploy-services]
+    cmds:
+      - docker build -t {{.APP_NAME}} .
+      - kind load docker-image {{.APP_NAME}}:latest --name {{.CLUSTER_NAME}}
+
+  deploy-app:
+    deps: [build-app]
+    cmds:
+      - helm upgrade --install {{.APP_NAME}} ./k8s/app-helm --create-namespace --namespace {{.APP_NAMESPACE}}
+
+  port-forward-app:
+    deps: [deploy-app]
+    cmds:
+      - kubectl -n {{.APP_NAMESPACE}} port-forward svc/{{.APP_NAME}} 8000:8000 &
+
+  port-forward-grafana:
+    deps: [deploy-prometheus]
+    cmds:
+      - kubectl -n {{.GRAFANA_NAMESPACE}} port-forward svc/prometheus-grafana 3000:3000 &
+
+  print-helper:
+    deps: [port-forward-app]
+    cmds:
+      - echo "Setup complete! You can now start making curl requests to your app at http://localhost:8000"
+      - echo "Grafana is available at 'http://localhost:3000' and with user=admin password=prom-operator"
+
+  deploy-all:
+    cmds:
+      - task: deploy-cluster
+      - task: wait-for-cluster
+      - task: setup-helm
+      - task: deploy-services
+      - task: post-deploy-services
+      - task: build-app
+      - task: deploy-app
+      - task: port-forward-app
+      - task: port-forward-grafana
+      - task: print-helper
+
+  clean:
+    cmds:
+      - kind delete cluster --name {{.CLUSTER_NAME}}

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: fastapi-celery-app
-description: A Helm chart for FastAPI Celery application
+name: wordz
+description: A Helm chart for Wordz - a RESTful FastAPI Celery application for calculating most common words
 version: 0.1.0
 appVersion: "1.0.0"

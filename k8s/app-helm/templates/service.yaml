@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fastapi-celery-app.fullname" . }}
+  name: {{ include "wordz.fullname" . }}
   labels:
-    {{- include "fastapi-celery-app.labels" . | nindent 4 }}
+    {{- include "wordz.labels" . | nindent 4 }}
     {{- with .Values.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -15,4 +15,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "fastapi-celery-app.selectorLabels" . | nindent 4 }}
+    {{- include "wordz.selectorLabels" . | nindent 4 }}

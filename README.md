@@ -1,3 +1,9 @@
+Mac install go-task
+```
+brew install go-task
+```
+
+
 ```
 cat <<EOF | kind create cluster --config=-
 kind: Cluster
@@ -17,6 +23,7 @@ nodes:
   - containerPort: 443
     hostPort: 443
     protocol: TCP
+- role: worker
 - role: worker
 - role: worker
 EOF
@@ -42,9 +49,14 @@ helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 helm upgrade --install loki grafana/loki-stack -f k8s/loki-stack/values.yaml --create-namespace --namespace loki
 ```
+
+helm upgrade --install loki grafana/loki -f k8s/loki/values.yaml --create-namespace --namespace loki
+helm upgrade --install promtail -n loki grafana/promtail --create-namespace --namespace loki
+
+
 Load the locally built image to the kind instance
 ```
-kind load docker-image fastapi-celery-app
+kind load docker-image wordz
 ```
 
 deploy keda

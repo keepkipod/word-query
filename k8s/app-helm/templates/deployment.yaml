@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fastapi-celery-app.fullname" . }}
+  name: {{ include "wordz.fullname" . }}
   labels:
-    {{- include "fastapi-celery-app.labels" . | nindent 4 }}
+    {{- include "wordz.labels" . | nindent 4 }}
     app.kubernetes.io/component: web
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "fastapi-celery-app.selectorLabels" . | nindent 6 }}
+      {{- include "wordz.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: web
   template:
     metadata:
       labels:
-        {{- include "fastapi-celery-app.selectorLabels" . | nindent 8 }}
+        {{- include "wordz.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: web
       annotations:
         prometheus.io/scrape: "true"

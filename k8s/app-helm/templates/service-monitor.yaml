@@ -2,20 +2,20 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "fastapi-celery-app.fullname" . }}
+  name: {{ include "wordz.fullname" . }}
   {{- if .Values.serviceMonitor.namespace }}
   namespace: {{ .Values.serviceMonitor.namespace }}
   {{- end }}
   labels:
-    {{- include "fastapi-celery-app.labels" . | nindent 4 }}
+    {{- include "wordz.labels" . | nindent 4 }}
     {{- with .Values.serviceMonitor.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  jobLabel: {{ include "fastapi-celery-app.fullname" . }}
+  jobLabel: {{ include "wordz.fullname" . }}
   selector:
     matchLabels:
-      {{- include "fastapi-celery-app.selectorLabels" . | nindent 6 }}
+      {{- include "wordz.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: web
   namespaceSelector:
     matchNames:

@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fastapi-celery-app.fullname" . }}-celery
+  name: {{ include "wordz.fullname" . }}-celery
   labels:
-    {{- include "fastapi-celery-app.labels" . | nindent 4 }}
+    {{- include "wordz.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery
 spec:
   selector:
-    {{- include "fastapi-celery-app.selectorLabels" . | nindent 4 }}
+    {{- include "wordz.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: celery
   ports:
     - port: {{ .Values.celery.metricsPort }}
