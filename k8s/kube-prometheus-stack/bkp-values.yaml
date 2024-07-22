@@ -1,0 +1,62 @@
+grafana:
+  enabled: true
+  additionalDataSources:
+  - access: proxy
+    isDefault: false
+    name: loki
+    orgId: 1
+    type: loki
+    url: http://loki.loki:3100
+    version: 1
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      fastapi:
+        gnetId: 18739
+        revision: 1
+        datasource: Prometheus
+      app-logs:
+        gnetId: 13639
+        revision: 1
+        datasource: Prometheus
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    additionalScrapeConfigs:
+      - job_name: loki
+        static_configs:
+          - targets:
+              - loki:3100
+      - job_name: 'fastapi-celery-app'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            action: keep
+            regex: fastapi-celery-app
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "8000"
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+            action: replace
+            target_label: component
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
+
+alertmanager:
+  enabled: false

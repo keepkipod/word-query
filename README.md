@@ -150,42 +150,7 @@ Start port-forward to access grafana and login with the following credentials
 ```
 task port-forward-grafana
 ```
+Via browser: http://localhost:8080
 Username: `admin`
 Password: `Hatzilim`
 
-# Get articles
-curl http://127.0.0.1:8000/articles
-# Result
-{"articles":["legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf","religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf","gods-of-ancient-rome.pdf","ethics-in-ancient-rome.pdf","politics-of-exile-and-asylum-in-ancient-rome.pdf","assessment-creation-assignment-ancient-rome.pdf","hellenistic-world-and-the-rise-of-rome.pdf"]}
-# Analyze articles
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf,religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf,ethics-in-ancient-rome.pdf,politics-of-exile-and-asylum-in-ancient-rome.pdf,assessment-creation-assignment-ancient-rome.pdf,hellenistic-world-and-the-rise-of-rome.pdf"}'
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf,religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf"}'
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf,religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf,ethics-in-ancient-rome.pdf"}'
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf,religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf,ethics-in-ancient-rome.pdf,politics-of-exile-and-asylum-in-ancient-rome.pdf,legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf"}'
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "legumes-in-ancient-greece-and-rome-food-medicine-or-poison.pdf,religious-aspects-of-war-in-the-ancient-near-east-and-rome.pdf,ethics-in-ancient-rome.pdf,politics-of-exile-and-asylum-in-ancient-rome.pdf,assessment-creation-assignment-ancient-rome.pdf"}'
-
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "assessment-creation-assignment-ancient-rome.pdf"}'
-
-curl -X POST http://localhost:8000/analyze-documents \
--H "Content-Type: application/json" \
--d '{"file_names": "sample.pdf"}'
-
-
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml && helm upgrade --install sample-redis bitnami/redis --create-namespace --namespace redis --set architecture=standalone --set auth.enabled=false && helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --create-namespace --namespace monitoring
