@@ -25,20 +25,16 @@ grafana:
           path: /var/lib/grafana/dashboards/default
   dashboards:
     default:
-      fastapi-metrics:
-        gnetId: 18739
-        revision: 1
-        datasource: loki
-      app-logs:
-        gnetId: 13639
-        revision: 1
-        datasource: loki
+      # fastapi-metrics:
+      #   gnetId: 18739
+      #   revision: 1
+      #   datasource: loki
       fastapi:
         file: dashboards/fastapi.json
         datasource: loki
       app:
         file: dashboards/logs.json
-        datasource: loki
+        # datasource: loki
   additionalDataSources:
     - name: Loki
       type: loki
