@@ -60,7 +60,6 @@ The response includes a list of the top 10 most common words and their frequenci
 
 *Note: Make sure to separate multiple file names with commas in the file_names field.*
 
-## Prerequisites
 ### TL;DR
 ```
 make && task deploy-all
