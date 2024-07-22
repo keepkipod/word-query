@@ -85,7 +85,7 @@ tasks:
 
   port-forward-grafana:
     cmds:
-      - kubectl -n {{.GRAFANA_NAMESPACE}} port-forward svc/prometheus-grafana 3000:3000
+      - kubectl -n {{.GRAFANA_NAMESPACE}} port-forward svc/prometheus-grafana 8080:80
 
   uninstall-app:
     cmds:
