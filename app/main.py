@@ -6,14 +6,19 @@ from app.tasks import process_document, combine_results
 from celery import group
 import traceback
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import REGISTRY, generate_latest
+from app.metrics import PrometheusMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# Add PrometheusMiddleware
+app.add_middleware(PrometheusMiddleware, app_name="word-counter-app")
+
 # Initialize Prometheus instrumentation
-Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
+Instrumentator().instrument(app).expose(app)
 
 ARTICLES_DIR = "/app/Articles"
 
@@ -22,12 +27,7 @@ class AnalysisRequest(BaseModel):
 
 @app.get("/health")
 async def health_check():
-    try:
-        # You can add more checks here if needed, e.g., database connection
-        return Response(content="Healthy", media_type="text/plain")
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Health check failed")
+    return Response(content="Healthy", media_type="text/plain")
 
 @app.get("/articles")
 async def list_articles():
@@ -52,18 +52,14 @@ async def analyze_documents(request: AnalysisRequest):
 
         logger.info(f"Processing {len(file_contents)} files")
 
-        # Use group to process documents
         job = group(process_document.s(doc) for doc in file_contents)
         result = job.apply_async()
 
-        # Wait for all tasks to complete
-        task_results = result.get(timeout=120)  # 2 minute timeout
+        task_results = result.get(timeout=300)  # 5 minutes timeout
 
-        # Combine results
         final_result = combine_results.delay(task_results)
 
-        # Wait for the final result
-        combined_result = final_result.get(timeout=30)  # 30 second timeout for combining
+        combined_result = final_result.get(timeout=60)  # 1 minute timeout
 
         return {"most_common_words": combined_result}
     except Exception as e:
@@ -76,3 +72,11 @@ async def global_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {str(exc)}")
     logger.error(traceback.format_exc())
     return {"detail": "An unexpected error occurred. Please try again later."}
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(REGISTRY), media_type="text/plain")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

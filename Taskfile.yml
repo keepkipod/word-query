@@ -51,6 +51,7 @@ tasks:
 
   deploy-monitoring:
     cmds:
+      - kubectl apply -f k8s/kube-prometheus-stack/fastapi-dashboard.yaml -f k8s/kube-prometheus-stack/logs.yaml
       - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --version 58.3.3 --create-namespace --namespace monitoring
 
   deploy-loki:

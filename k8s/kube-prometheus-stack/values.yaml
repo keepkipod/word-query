@@ -31,7 +31,7 @@ grafana:
       #   datasource: loki
       fastapi:
         file: dashboards/fastapi.json
-        datasource: loki
+        # datasource: loki
       app:
         file: dashboards/logs.json
         # datasource: loki

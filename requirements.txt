@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-celery
-redis
-pdfminer.six
-prometheus-client
-prometheus-fastapi-instrumentator
+fastapi==0.111.0
+uvicorn==0.29.0
+celery==5.3.6
+redis==5.0.1
+pdfminer.six==20221105
+prometheus-client==0.20.0
+prometheus-fastapi-instrumentator==6.1.0
