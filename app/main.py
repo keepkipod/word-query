@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # Add PrometheusMiddleware
-app.add_middleware(PrometheusMiddleware, app_name="word-counter-app")
+app.add_middleware(PrometheusMiddleware, app_name="wordz")
 
 # Initialize Prometheus instrumentation
 Instrumentator().instrument(app).expose(app)

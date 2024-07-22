@@ -10,7 +10,7 @@ grafana:
       enabled: true
       label: grafana_dashboard
       labelValue: "1"
-  # defaultDashboardsEnabled: false
+  defaultDashboardsEnabled: false
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -23,18 +23,18 @@ grafana:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/default
-  dashboards:
-    default:
-      # fastapi-metrics:
-      #   gnetId: 18739
-      #   revision: 1
-      #   datasource: loki
-      fastapi:
-        file: dashboards/fastapi.json
-        # datasource: loki
-      app:
-        file: dashboards/logs.json
-        # datasource: loki
+  # dashboards:
+  #   default:
+  #     # fastapi-metrics:
+  #     #   gnetId: 18739
+  #     #   revision: 1
+  #     #   datasource: loki
+  #     fastapi:
+  #       file: dashboards/fastapi.json
+  #       # datasource: loki
+  #     app:
+  #       file: dashboards/logs.json
+  #       # datasource: loki
   additionalDataSources:
     - name: Loki
       type: loki

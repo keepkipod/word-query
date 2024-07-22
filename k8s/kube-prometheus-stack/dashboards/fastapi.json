@@ -989,8 +989,8 @@
       {
         "current": {
           "selected": false,
-          "text": "word-counter-app",
-          "value": "word-counter-app"
+          "text": "wordz",
+          "value": "wordz"
         },
         "datasource": {
           "type": "prometheus",
