@@ -1,6 +1,6 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 from app.tasks import process_document, combine_results
 from celery import group
@@ -19,6 +19,15 @@ ARTICLES_DIR = "/app/Articles"
 
 class AnalysisRequest(BaseModel):
     file_names: str
+
+@app.get("/health")
+async def health_check():
+    try:
+        # You can add more checks here if needed, e.g., database connection
+        return Response(content="Healthy", media_type="text/plain")
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Health check failed")
 
 @app.get("/articles")
 async def list_articles():

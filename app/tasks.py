@@ -1,12 +1,13 @@
 import logging
 from celery import Celery
+from celery.signals import worker_ready
 from collections import Counter as CollectionsCounter
 import re
 import io
 from pdfminer.high_level import extract_text
 import os
 import traceback
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Histogram, start_http_server
 import time
 
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,32 @@ def process_document(document):
         logger.error(f"Error processing document: {str(e)}")
         logger.error(traceback.format_exc())
         return None
+
+# unction to start a simple HTTP server for health checks
+def start_health_check_server(port=8080):
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class HealthCheckHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/health':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b"Healthy")
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+    server = HTTPServer(('', port), HealthCheckHandler)
+    server.serve_forever()
+
+# Start the health check server when the worker is ready
+@worker_ready.connect
+def start_health_check_server_on_ready(**kwargs):
+    import threading
+    threading.Thread(target=start_health_check_server, daemon=True).start()
+    logger.info("Health check server started on port 8080")
+
 
 @celery_app.task
 def combine_results(results):

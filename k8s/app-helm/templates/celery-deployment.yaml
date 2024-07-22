@@ -35,5 +35,20 @@ spec:
           ports:
             - containerPort: {{ .Values.celery.metricsPort }}
               name: metrics
+            - name: health
+              containerPort: 8080
+              protocol: TCP              
           resources:
             {{- toYaml .Values.celery.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10

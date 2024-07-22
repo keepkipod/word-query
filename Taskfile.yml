@@ -1,10 +1,12 @@
 version: '3'
 
 vars:
-  CLUSTER_NAME: mycluster
+  CLUSTER_NAME: wordz-cluster
   APP_NAME: wordz
   APP_NAMESPACE: app
   GRAFANA_NAMESPACE: monitoring
+  GRAFANA_ADMIN_USER: admin
+  GRAFANA_ADMIN_PASSWORD: Hatzilim
 
 tasks:
   deploy-cluster:
@@ -20,6 +22,7 @@ tasks:
       - helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
       - helm repo add bitnami https://charts.bitnami.com/bitnami
       - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+      - helm repo add grafana https://grafana.github.io/helm-charts
       - helm repo update
 
   deploy-ingress:
@@ -30,11 +33,29 @@ tasks:
     cmds:
       - helm upgrade --install redis bitnami/redis -f k8s/redis/values.yaml --create-namespace --namespace redis
 
+  monitoring-secrets:
+    cmds:
+      - kubectl create namespace monitoring
+      - |
+        kubectl apply -f - << EOF
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: kube-prometheus-stack-secret
+          namespace: monitoring
+        stringData:
+          GRAFANA_ADMIN_PASSWORD: '{{.GRAFANA_ADMIN_PASSWORD}}'
+          GRAFANA_ADMIN_USER: '{{.GRAFANA_ADMIN_USER}}'
+        EOF
+    ignore_error: true
+
   deploy-monitoring:
     cmds:
-      - helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace ingress-nginx
-      - helm upgrade --install redis bitnami/redis -f k8s/redis/values.yaml --create-namespace --namespace redis
-      - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --create-namespace --namespace monitoring
+      - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f k8s/kube-prometheus-stack/values.yaml --version 58.3.3 --create-namespace --namespace monitoring
+
+  deploy-loki:
+    cmds:
+      - helm upgrade --install loki grafana/loki-stack -f k8s/loki/values.yaml --version 2.10.2 --create-namespace --namespace monitoring
 
   post-deploy-services:
     cmds:
@@ -54,7 +75,6 @@ tasks:
       - kubectl rollout status deployment --namespace {{.APP_NAMESPACE}} --timeout=3m
 
   print-helper:
-    deps: [port-forward-app,port-forward-grafana]
     cmds:
       - echo "Setup complete! You can now start making curl requests to your app at http://localhost:8000"
       - echo "Grafana is available at 'http://localhost:3000' and with user=admin password=prom-operator"
@@ -62,6 +82,15 @@ tasks:
   port-forward-app:
     cmds:
       - kubectl -n {{.APP_NAMESPACE}} port-forward svc/{{.APP_NAME}} 8000:8000
+
+  port-forward-grafana:
+    cmds:
+      - kubectl -n {{.GRAFANA_NAMESPACE}} port-forward svc/prometheus-grafana 3000:3000
+
+  uninstall-app:
+    cmds:
+      - helm uninstall {{.APP_NAME}} -n {{.APP_NAMESPACE}}
+      - kubectl delete namespace {{.APP_NAMESPACE}}
 
   deploy-all:
     cmds:
@@ -74,8 +103,12 @@ tasks:
         deps: [setup-helm]
       - task: deploy-redis
         deps: [setup-helm]
-      - task: deploy-monitoring
+      - task: monitoring-secrets
         deps: [setup-helm]
+      - task: deploy-monitoring
+        deps: [monitoring-secrets]
+      - task: deploy-loki
+        deps: [deploy-monitoring]
       - task: post-deploy-services
         deps: [deploy-ingress,deploy-redis,deploy-monitoring]
       - task: build-app
@@ -83,6 +116,7 @@ tasks:
       - task: deploy-app
         deps: [build-app]
       - task: print-helper
+        deps: [deploy-app]
       - task: port-forward-app
         deps: [deploy-app,print-helper]
 
