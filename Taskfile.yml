@@ -92,6 +92,14 @@ tasks:
       - helm uninstall {{.APP_NAME}} -n {{.APP_NAMESPACE}}
       - kubectl delete namespace {{.APP_NAMESPACE}}
 
+  uninstall-monitoring:
+    cmds:
+      - helm uninstall prometheus -n {{.GRAFANA_NAMESPACE}}
+
+  uninstall-loki:
+    cmds:
+      - helm uninstall loki -n {{.GRAFANA_NAMESPACE}}
+
   deploy-all:
     cmds:
       - task: deploy-cluster

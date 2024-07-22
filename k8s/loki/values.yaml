@@ -1,6 +1,8 @@
 promtail:
   enabled: true
 loki:
+  image:
+    tag: 2.9.3
   isDefault: false
   auth_enabled: false
   persistence:

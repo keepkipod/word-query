@@ -3,15 +3,14 @@ grafana:
     existingSecret: kube-prometheus-stack-secret
     userKey: GRAFANA_ADMIN_USER
     passwordKey: GRAFANA_ADMIN_PASSWORD
-  # sidecar:
-  #   dashboards:
-  #     enabled: true
-  #     label: grafana_dashboard
-  #     folderAnnotation: grafana_folder
-  #     provider:
-  #       allowUiUpdates: true
-  #       foldersFromFilesStructure: true
-  defaultDashboardsEnabled: false
+  sidecar:
+    datasources:
+      enabled: true
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+  # defaultDashboardsEnabled: false
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -26,24 +25,27 @@ grafana:
           path: /var/lib/grafana/dashboards/default
   dashboards:
     default:
-      fastapi:
+      fastapi-metrics:
         gnetId: 18739
+        revision: 1
+        datasource: loki
+      app-logs:
+        gnetId: 13639
+        revision: 1
+        datasource: loki
+      fastapi:
+        file: dashboards/fastapi.json
         datasource: loki
       app:
-        gnetId: 13639
+        file: dashboards/logs.json
         datasource: loki
-      nginx:
-        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/nginx.json
-        datasource: default
-      nginx-request-handling-performance:
-        url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/request-handling-performance.json
-        datasource: default        
   additionalDataSources:
     - name: Loki
       type: loki
       access: proxy
       url: "http://loki:3100"
-      version: 1
+      version: 2
+      orgId: 1
       basicAuth: false
       isDefault: false
 
